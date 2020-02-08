@@ -38,6 +38,7 @@ namespace Streamdeck_vJoy
                 instance.setToCustomValue = "";
                 instance.setStepUp = "";
                 instance.setStepDown = "";
+                instance.setStepStartValue = "";
 
                 instance.resetToMin = true;
                 instance.resetToMax = false;
@@ -127,6 +128,9 @@ namespace Streamdeck_vJoy
 
             [JsonProperty(PropertyName = "setStepDown")]
             public string setStepDown { get; set; }
+
+            [JsonProperty(PropertyName = "setStepStartValue")]
+            public string setStepStartValue { get; set; }
 
             [JsonProperty(PropertyName = "triggerPushAndRelease")]
             public bool triggerPushAndRelease { get; set; }
@@ -241,7 +245,7 @@ namespace Streamdeck_vJoy
                     }
                     else if (settings.setToCenter)
                     {
-                        axisValue = GetJoystickAxisCenter(theAxis);
+                        axisValue = centerAxisValue(theAxis);
                     }
                     else if (settings.setToCustom)
                     {
@@ -264,12 +268,26 @@ namespace Streamdeck_vJoy
             
         }
 
+        private int centerAxisValue(HID_USAGES theAxis)
+        {
+            var axisVal = GetJoystickAxisCenter(theAxis);
+            axisValues[theAxis] = axisVal;
+            return axisVal;
+        }
+
+
         private int stepDownAxisValue(HID_USAGES theAxis, string stepValue)
         {
             var axisVal = 0;
             if (axisValues.ContainsKey(theAxis))
             {
                 axisVal = axisValues[theAxis];
+            }
+            else
+            {
+                // default start value not set - get it
+                var startVal = string.IsNullOrEmpty(settings.setStepStartValue) ? 0 : Convert.ToInt32(settings.setStepStartValue);
+                axisVal = startVal;
             }
             axisVal -= Convert.ToInt32(stepValue);
             if (axisVal < GetJoystickAxisMinValue(theAxis))
@@ -286,6 +304,12 @@ namespace Streamdeck_vJoy
             if (axisValues.ContainsKey(theAxis))
             {
                 axisVal = axisValues[theAxis];
+            }
+            else
+            {
+                // default start value not set - get it
+                var startVal = string.IsNullOrEmpty(settings.setStepStartValue) ? 0 : Convert.ToInt32(settings.setStepStartValue);
+                axisVal = startVal;
             }
             axisVal += Convert.ToInt32(stepValue);
             if (axisVal > GetJoystickAxisMaxValue(theAxis))
